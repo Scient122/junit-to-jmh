@@ -610,7 +610,7 @@ public class NestedBenchmarkSuiteBuilder {
             benchmarkClass.addAnnotation(measurement);
             benchmarkClass.addAnnotation(mode);
             benchmarkClass.addAnnotation(unit);
-            System.out.println(benchmarkClass);
+
 
 
             benchmarkClass.accept(new BenchmarkTemplateModifier(), testInputClass);
