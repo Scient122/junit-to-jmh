@@ -8,11 +8,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
-import com.github.javaparser.ast.expr.AssignExpr;
-import com.github.javaparser.ast.expr.ClassExpr;
-import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.FieldAccessExpr;
-import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.*;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
 import com.github.javaparser.ast.nodeTypes.modifiers.NodeWithStaticModifier;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -37,6 +33,12 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Warmup;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+
 
 import java.io.File;
 import java.lang.annotation.Annotation;
@@ -64,9 +66,28 @@ public class NestedBenchmarkSuiteBuilder {
     private final Map<String, InputClass> benchmarkClasses = new HashMap<>();
     private final Map<String, InputClass> abstractBenchmarkClasses = new HashMap<>();
 
+    private int fork, warmup, measurement;
+    private String mode, unit;
+
     public NestedBenchmarkSuiteBuilder(List<Path> sourcePaths, List<Path> classPath) {
         this.sourcePath = sourcePaths.stream().collect(Collectors.toUnmodifiableList());
         this.inputClassRepository = new InputClassRepository(sourcePaths, classPath);
+    }
+
+    public NestedBenchmarkSuiteBuilder(List<Path> sourcePaths, List<Path> classPath,int fork, int warmup, int measurement, String mode, String unit) {
+        this.sourcePath = sourcePaths.stream().collect(Collectors.toUnmodifiableList());
+        this.inputClassRepository = new InputClassRepository(sourcePaths, classPath);
+        this.fork = fork;
+        this.warmup = warmup;
+        this.measurement = measurement;
+        this.mode="";
+
+        String[] substrings = mode.split("-");
+        for(int i=0;i< substrings.length;i++){
+            substrings[i] = substrings[i].substring(0,1).toUpperCase() + substrings[i].substring(1);
+            this.mode+=substrings[i];
+        }
+        this.unit = unit.toUpperCase();
     }
 
     public NestedBenchmarkSuiteBuilder(Path sourcePath, Path classPath) {
@@ -567,6 +588,31 @@ public class NestedBenchmarkSuiteBuilder {
             if (abstractBenchmarkClasses.containsKey(testClassName)) {
                 benchmarkClass.setAbstract(true);
             }
+
+            SingleMemberAnnotationExpr fork = new SingleMemberAnnotationExpr();
+            fork.setName("org.openjdk.jmh.annotations.Fork");
+            fork.setMemberValue(new NameExpr(""+this.fork));
+            NormalAnnotationExpr warmup = new NormalAnnotationExpr();
+            warmup.setName("org.openjdk.jmh.annotations.Warmup");
+            warmup.addPair("iterations",""+this.warmup);
+            NormalAnnotationExpr measurement = new NormalAnnotationExpr();
+            measurement.setName("org.openjdk.jmh.annotations.Measurement");
+            measurement.addPair("iterations",""+this.measurement);
+            SingleMemberAnnotationExpr mode = new SingleMemberAnnotationExpr();
+            mode.setName("org.openjdk.jmh.annotations.BenchmarkMode");
+            mode.setMemberValue((new NameExpr("org.openjdk.jmh.annotations.Mode."+this.mode)));
+            SingleMemberAnnotationExpr unit = new SingleMemberAnnotationExpr();
+            unit.setName("org.openjdk.jmh.annotations.OutputTimeUnit");
+            unit.setMemberValue(new NameExpr("java.util.concurrent.TimeUnit."+this.unit));
+
+            benchmarkClass.addAnnotation(fork);
+            benchmarkClass.addAnnotation(warmup);
+            benchmarkClass.addAnnotation(measurement);
+            benchmarkClass.addAnnotation(mode);
+            benchmarkClass.addAnnotation(unit);
+            System.out.println(benchmarkClass);
+
+
             benchmarkClass.accept(new BenchmarkTemplateModifier(), testInputClass);
             enclosing.addMember(benchmarkClass);
         }

@@ -72,6 +72,39 @@ public class Converter implements Callable<Integer> {
             description = "File to load class names from.")
     private Path classNamesFile;
 
+    @CommandLine.Option(
+            names = {"--fork"},
+            description = {"The number of forks which will be created."}
+    )
+    private int fork=5;
+
+    @CommandLine.Option(
+            names = {"--warmup-iterations"},
+            description = {"The number of warm up iterations."}
+    )
+    private int warmup_iterations=5;
+
+    @CommandLine.Option(
+            names = {"--measurement-iterations"},
+            description = {"The number of measurement iterations."}
+    )
+    private int measurement_iterations=5;
+
+    @CommandLine.Option(
+            names = {"--benchmark-mode"},
+            description = {"The benchmark mode desired."}
+    )
+    private String benchmark_mode="throughput";
+
+    @CommandLine.Option(
+            names = {"--output-time-unit"},
+            description = {"The output time unit desired."}
+    )
+    private String output_time_unit="seconds";
+
+    private String[] modes = {"throughput","average-time","sample-time","single-shot-time","all"};
+    private String[] time_units = {"seconds","nanoseconds","milliseconds","microseconds","minutes","hours","days"};
+
     private static CompilationUnit loadApiSource(Class<?> apiClass) throws IOException {
         return StaticJavaParser.parseResource(
                 apiClass.getCanonicalName().replace('.', '/') + ".java");
@@ -89,7 +122,7 @@ public class Converter implements Callable<Integer> {
 
     private void generateNestedBenchmarks() throws ClassNotFoundException, IOException {
         NestedBenchmarkSuiteBuilder benchmarkSuiteBuilder =
-                new NestedBenchmarkSuiteBuilder(toPaths(sourcePath), toPaths(classPath));
+                new NestedBenchmarkSuiteBuilder(toPaths(sourcePath), toPaths(classPath),fork,warmup_iterations,measurement_iterations,benchmark_mode,output_time_unit);
         for (String className : classNames) {
             benchmarkSuiteBuilder.addTestClass(className);
         }
@@ -223,6 +256,48 @@ public class Converter implements Callable<Integer> {
                 }
             }
         }
+        if(fork <= 0){
+            throw new RuntimeException("fork option must be >= than 1");
+        }
+        else {
+            System.out.println("ashua");
+        }
+
+        if(warmup_iterations <0){
+            throw new RuntimeException("warmup iterations option must be >= than 0");
+        }
+
+        if(measurement_iterations <= 0){
+            throw new RuntimeException("measurement iterations option must be >= than 1");
+        }
+
+        boolean mode_found = false;
+
+        for(String mode : modes) {
+
+            if (benchmark_mode.equals(mode)) {
+                mode_found = true;
+                break;
+            }
+        }
+
+        if(!mode_found)
+            throw new RuntimeException("Benchmark mode is not valid. These are the legit values: throughput average-time sample-time single-shot-time all");
+
+        boolean unit_found = false;
+
+        for(String unit : time_units){
+            if(output_time_unit.equals(unit)){
+                unit_found = true;
+                break;
+            }
+        }
+
+        if(!unit_found)
+            throw new RuntimeException("Output time unit is not valid. These are the legit values: nanoseconds microseconds milliseconds seconds minutes hours days");
+
+
+
         if (!ju4RunnerBenchmark) {
             if (!tailoredBenchmark) {
                 generateNestedBenchmarks();
