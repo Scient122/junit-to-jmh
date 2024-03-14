@@ -33,11 +33,7 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.openjdk.jmh.annotations.Fork;
-import org.openjdk.jmh.annotations.Warmup;
-import org.openjdk.jmh.annotations.Measurement;
-import org.openjdk.jmh.annotations.BenchmarkMode;
-import org.openjdk.jmh.annotations.OutputTimeUnit;
+
 
 
 import java.io.File;
@@ -67,7 +63,7 @@ public class NestedBenchmarkSuiteBuilder {
     private final Map<String, InputClass> abstractBenchmarkClasses = new HashMap<>();
 
     private int fork, warmup, measurement;
-    private String mode, unit;
+    private String mode, unit, warmup_unit,measurement_unit;
     private int warmup_time, measurement_time;
 
     public NestedBenchmarkSuiteBuilder(List<Path> sourcePaths, List<Path> classPath) {
@@ -75,7 +71,7 @@ public class NestedBenchmarkSuiteBuilder {
         this.inputClassRepository = new InputClassRepository(sourcePaths, classPath);
     }
 
-    public NestedBenchmarkSuiteBuilder(List<Path> sourcePaths, List<Path> classPath,int fork, int warmup, int measurement, String mode, String unit, int warmup_time, int measurement_time) {
+    public NestedBenchmarkSuiteBuilder(List<Path> sourcePaths, List<Path> classPath,int fork, int warmup, int measurement, String mode, String unit, int warmup_time, int measurement_time, String warmup_unit, String measurement_unit) {
         this.sourcePath = sourcePaths.stream().collect(Collectors.toUnmodifiableList());
         this.inputClassRepository = new InputClassRepository(sourcePaths, classPath);
         this.fork = fork;
@@ -91,6 +87,8 @@ public class NestedBenchmarkSuiteBuilder {
             this.mode+=substrings[i];
         }
         this.unit = unit.toUpperCase();
+        this.warmup_unit = warmup_unit.toUpperCase();
+        this.measurement_unit = measurement_unit.toUpperCase();
     }
 
     public NestedBenchmarkSuiteBuilder(Path sourcePath, Path classPath) {
@@ -599,10 +597,12 @@ public class NestedBenchmarkSuiteBuilder {
             warmup.setName("org.openjdk.jmh.annotations.Warmup");
             warmup.addPair("iterations",""+this.warmup);
             warmup.addPair("time",""+this.warmup_time);
+            warmup.addPair("timeUnit","java.util.concurrent.TimeUnit."+this.warmup_unit);
             NormalAnnotationExpr measurement = new NormalAnnotationExpr();
             measurement.setName("org.openjdk.jmh.annotations.Measurement");
             measurement.addPair("iterations",""+this.measurement);
             measurement.addPair("time",""+this.measurement_time);
+            measurement.addPair("timeUnit","java.util.concurrent.TimeUnit."+this.measurement_unit);
             SingleMemberAnnotationExpr mode = new SingleMemberAnnotationExpr();
             mode.setName("org.openjdk.jmh.annotations.BenchmarkMode");
             mode.setMemberValue((new NameExpr("org.openjdk.jmh.annotations.Mode."+this.mode)));

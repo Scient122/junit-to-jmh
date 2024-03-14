@@ -91,6 +91,12 @@ public class Converter implements Callable<Integer> {
     private int warmup_time = 10;
 
     @CommandLine.Option(
+            names={"--warmup-time-unit"},
+            description={"Time unit used for warm up iterations' length"}
+    )
+    private String warmup_time_unit = "seconds";
+
+    @CommandLine.Option(
             names = {"--measurement-iterations"},
             description = {"The number of measurement iterations."}
     )
@@ -101,6 +107,12 @@ public class Converter implements Callable<Integer> {
             description = {"The time for each measurement iteration"}
     )
     private int measurement_time=10;
+
+    @CommandLine.Option(
+            names = {"--measurement-time-unit"},
+            description = {"Time unit used for measurement iterations' length"}
+    )
+    private String measurement_time_unit = "seconds";
 
     @CommandLine.Option(
             names = {"--benchmark-mode"},
@@ -134,7 +146,7 @@ public class Converter implements Callable<Integer> {
 
     private void generateNestedBenchmarks() throws ClassNotFoundException, IOException {
         NestedBenchmarkSuiteBuilder benchmarkSuiteBuilder =
-                new NestedBenchmarkSuiteBuilder(toPaths(sourcePath), toPaths(classPath),fork,warmup_iterations,measurement_iterations,benchmark_mode,output_time_unit,warmup_time,measurement_time);
+                new NestedBenchmarkSuiteBuilder(toPaths(sourcePath), toPaths(classPath),fork,warmup_iterations,measurement_iterations,benchmark_mode,output_time_unit,warmup_time,measurement_time,warmup_time_unit,measurement_time_unit);
         for (String className : classNames) {
             benchmarkSuiteBuilder.addTestClass(className);
         }
@@ -313,6 +325,28 @@ public class Converter implements Callable<Integer> {
 
         if(!unit_found)
             throw new RuntimeException("Output time unit is not valid. These are the legit values: nanoseconds microseconds milliseconds seconds minutes hours days");
+
+        boolean warmup_time_unit_found=false;
+        for(String unit : time_units){
+            if(warmup_time_unit.equals(unit)){
+                warmup_time_unit_found=true;
+                break;
+            }
+        }
+
+        if(!warmup_time_unit_found)
+            throw new RuntimeException("Warmup time unit is not valid. These are the legit values: nanoseconds microseconds milliseconds seconds minutes hours days");
+
+        boolean measurement_time_unit_found=false;
+        for(String unit : time_units){
+            if(measurement_time_unit.equals(unit)){
+                measurement_time_unit_found=true;
+                break;
+            }
+        }
+
+        if(!measurement_time_unit_found)
+            throw new RuntimeException("Measurement time unit is not valid. These are the legit values: nanoseconds microseconds milliseconds seconds minutes hours days");
 
 
 
