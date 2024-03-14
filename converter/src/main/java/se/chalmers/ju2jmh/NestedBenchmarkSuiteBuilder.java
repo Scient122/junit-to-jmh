@@ -68,19 +68,22 @@ public class NestedBenchmarkSuiteBuilder {
 
     private int fork, warmup, measurement;
     private String mode, unit;
+    private int warmup_time, measurement_time;
 
     public NestedBenchmarkSuiteBuilder(List<Path> sourcePaths, List<Path> classPath) {
         this.sourcePath = sourcePaths.stream().collect(Collectors.toUnmodifiableList());
         this.inputClassRepository = new InputClassRepository(sourcePaths, classPath);
     }
 
-    public NestedBenchmarkSuiteBuilder(List<Path> sourcePaths, List<Path> classPath,int fork, int warmup, int measurement, String mode, String unit) {
+    public NestedBenchmarkSuiteBuilder(List<Path> sourcePaths, List<Path> classPath,int fork, int warmup, int measurement, String mode, String unit, int warmup_time, int measurement_time) {
         this.sourcePath = sourcePaths.stream().collect(Collectors.toUnmodifiableList());
         this.inputClassRepository = new InputClassRepository(sourcePaths, classPath);
         this.fork = fork;
         this.warmup = warmup;
         this.measurement = measurement;
         this.mode="";
+        this.warmup_time = warmup_time;
+        this.measurement_time = measurement_time;
 
         String[] substrings = mode.split("-");
         for(int i=0;i< substrings.length;i++){
@@ -595,9 +598,11 @@ public class NestedBenchmarkSuiteBuilder {
             NormalAnnotationExpr warmup = new NormalAnnotationExpr();
             warmup.setName("org.openjdk.jmh.annotations.Warmup");
             warmup.addPair("iterations",""+this.warmup);
+            warmup.addPair("time",""+this.warmup_time);
             NormalAnnotationExpr measurement = new NormalAnnotationExpr();
             measurement.setName("org.openjdk.jmh.annotations.Measurement");
             measurement.addPair("iterations",""+this.measurement);
+            measurement.addPair("time",""+this.measurement_time);
             SingleMemberAnnotationExpr mode = new SingleMemberAnnotationExpr();
             mode.setName("org.openjdk.jmh.annotations.BenchmarkMode");
             mode.setMemberValue((new NameExpr("org.openjdk.jmh.annotations.Mode."+this.mode)));

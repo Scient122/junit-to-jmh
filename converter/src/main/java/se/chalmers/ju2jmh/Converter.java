@@ -85,10 +85,22 @@ public class Converter implements Callable<Integer> {
     private int warmup_iterations=5;
 
     @CommandLine.Option(
+            names = {"--warmup-time"},
+            description = {"The time for each warmup iteration"}
+    )
+    private int warmup_time = 10;
+
+    @CommandLine.Option(
             names = {"--measurement-iterations"},
             description = {"The number of measurement iterations."}
     )
     private int measurement_iterations=5;
+
+    @CommandLine.Option(
+            names={"--measurement-time"},
+            description = {"The time for each measurement iteration"}
+    )
+    private int measurement_time=10;
 
     @CommandLine.Option(
             names = {"--benchmark-mode"},
@@ -122,7 +134,7 @@ public class Converter implements Callable<Integer> {
 
     private void generateNestedBenchmarks() throws ClassNotFoundException, IOException {
         NestedBenchmarkSuiteBuilder benchmarkSuiteBuilder =
-                new NestedBenchmarkSuiteBuilder(toPaths(sourcePath), toPaths(classPath),fork,warmup_iterations,measurement_iterations,benchmark_mode,output_time_unit);
+                new NestedBenchmarkSuiteBuilder(toPaths(sourcePath), toPaths(classPath),fork,warmup_iterations,measurement_iterations,benchmark_mode,output_time_unit,warmup_time,measurement_time);
         for (String className : classNames) {
             benchmarkSuiteBuilder.addTestClass(className);
         }
@@ -259,16 +271,22 @@ public class Converter implements Callable<Integer> {
         if(fork <= 0){
             throw new RuntimeException("fork option must be >= than 1");
         }
-        else {
-            System.out.println("ashua");
-        }
+
 
         if(warmup_iterations <0){
             throw new RuntimeException("warmup iterations option must be >= than 0");
         }
 
+        if(warmup_time <= 0){
+            throw new RuntimeException("warm up time option must be > than 0");
+        }
+
         if(measurement_iterations <= 0){
             throw new RuntimeException("measurement iterations option must be >= than 1");
+        }
+
+        if(measurement_time <= 0){
+            throw new RuntimeException("measurement time option must be > than 0");
         }
 
         boolean mode_found = false;
