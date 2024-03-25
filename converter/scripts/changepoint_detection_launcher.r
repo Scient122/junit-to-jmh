@@ -35,7 +35,6 @@ for (i in 1:(length(result)/3)){
 knee <- kneedle(changepoints_numbers,penalty_values)
 pelt_penalty_value <- knee[[2]]
 pelt_result <- cpt.meanvar(averages_data,penalty="Manual",pen.value=pelt_penalty_value,method = "PELT", class = FALSE)
-#VERIFICARE SE L'ULTIMO CHANGEPOINT CORRISPONDE SEMPRE ALL'ULTIMO DATAPOINT.
 last_point <- pelt_result[[length(pelt_result)]]
 last_changepoint <- pelt_result[[length(pelt_result)-1]]
 last_segment_points_sum = 0
